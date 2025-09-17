@@ -56,8 +56,9 @@ def predict():
         
         return jsonify({
             'success': True,
-            'prediction': float(prediction),
-            'message': f'Predicted Bank Marketing Subscription: {prediction:.2f} mg/dL'
+            'prediction': int(prediction),
+            'probability': float(prediction) if hasattr(model, 'predict_proba') else None,
+            'message': f'Predicted Bank Marketing Subscription: {"Yes" if prediction >= 0.5 else "No"}'
         })
         
     except Exception as e:
@@ -66,18 +67,38 @@ def predict():
             'error': str(e)
         })
 
-@app.route('/health', methods=['GET'])
-def health():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'model_loaded': model is not None
-    })
 
 
 @app.route('/features', methods=['GET'])
 def features():
-    return jsonify({'status': 'healthy', 'model_loaded': model is not None})
+    """Get required features and example payload"""
+    example = {
+        'age': 35,
+        'job': 'admin.',
+        'marital': 'married',
+        'education': 'university.degree',
+        'default': 'no',
+        'housing': 'yes',
+        'loan': 'no',
+        'contact': 'cellular',
+        'month': 'may',
+        'day_of_week': 'thu',
+        'campaign': 1,
+        'pdays': 999,
+        'previous': 0,
+        'poutcome': 'nonexistent',
+        'emp.var.rate': 1.1,
+        'cons.price.idx': 93.2,
+        'cons.conf.idx': -36.4,
+        'euribor3m': 4.9,
+        'nr.employed': 5228.1
+    }
+    return jsonify({
+        'features': feature_names if feature_names else ['age','job','marital','education','default','housing','loan',
+        'contact','month','day_of_week','campaign','pdays','previous','poutcome',
+        'emp.var.rate','cons.price.idx','cons.conf.idx','euribor3m','nr.employed'],
+        'example_payload': example
+    })
 
 
 if __name__ == '__main__':
