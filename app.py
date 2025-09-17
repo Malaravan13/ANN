@@ -3,17 +3,19 @@ import joblib
 import pandas as pd
 import numpy as np
 import os
-
+import tensorflow as tf
 
 app = Flask(__name__)
 
 try:
-    model = joblib.load('Bank_model.joblib')
-    feature_names = joblib.load('Bank_feature_names.joblib')
-    print("Model loaded successfully!")
+    model = tf.keras.models.load_model('tensorflow_model')
+    preprocessor = joblib.load('preprocessor.pkl')
+    feature_names = joblib.load('feature_names.pkl')
+    print("TensorFlow model loaded successfully!")
 except FileNotFoundError:
-    print("Model files not found. Please train the model first.")
+    print("Model files not found. Please run save_tensorflow_model.py first.")
     model = None
+    preprocessor = None
     feature_names = []
 
 
@@ -35,30 +37,35 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     """API endpoint for Bank Marketing Subscription Prediction"""
-    if model is None:
+    if model is None or preprocessor is None:
         return jsonify({'success': False, 'error': 'Model not loaded'})
     
     try:
         data = request.get_json()
         
+        # Create DataFrame
         input_df = pd.DataFrame([data])
         
-       
-        
+        # Ensure all required features are present
         missing_features = set(feature_names) - set(input_df.columns)
         for feature in missing_features:
             input_df[feature] = 0
         
+        # Reorder columns to match training order
         input_df = input_df[feature_names]
         
+        # Apply preprocessing
+        X_processed = preprocessor.transform(input_df)
         
-        prediction = model.predict(input_df)[0]
+        # Get prediction from TensorFlow model
+        prediction_proba = model.predict(X_processed, verbose=0)[0][0]
+        prediction = 1 if prediction_proba >= 0.5 else 0
         
         return jsonify({
             'success': True,
             'prediction': int(prediction),
-            'probability': float(prediction) if hasattr(model, 'predict_proba') else None,
-            'message': f'Predicted Bank Marketing Subscription: {"Yes" if prediction >= 0.5 else "No"}'
+            'probability': float(prediction_proba),
+            'message': f'Predicted Bank Marketing Subscription: {"Yes" if prediction == 1 else "No"}'
         })
         
     except Exception as e:
@@ -67,6 +74,15 @@ def predict():
             'error': str(e)
         })
 
+
+
+@app.route('/health', methods=['GET'])
+def health():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'model_loaded': model is not None
+    })
 
 
 @app.route('/features', methods=['GET'])
