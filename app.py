@@ -8,10 +8,16 @@ import tensorflow as tf
 app = Flask(__name__)
 
 try:
-    model = tf.keras.models.load_model('tensorflow_model')
+    # Try to load the model (check both formats)
+    try:
+        model = tf.keras.models.load_model('tensorflow_model')
+        print("TensorFlow model loaded successfully!")
+    except:
+        model = tf.keras.models.load_model('tensorflow_model.h5')
+        print("TensorFlow model (H5 format) loaded successfully!")
+    
     preprocessor = joblib.load('preprocessor.pkl')
     feature_names = joblib.load('feature_names.pkl')
-    print("TensorFlow model loaded successfully!")
 except FileNotFoundError:
     print("Model files not found. Please run save_tensorflow_model.py first.")
     model = None

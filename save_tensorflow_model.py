@@ -90,15 +90,23 @@ def save_model():
     
     # Save model using TensorFlow's native method
     print("Saving model...")
-    model.save('tensorflow_model')
+    try:
+        model.save('tensorflow_model')
+        print("✓ TensorFlow model saved successfully!")
+    except Exception as e:
+        print(f"Error saving TensorFlow model: {e}")
+        print("Trying alternative save method...")
+        # Alternative: Save as H5 format
+        model.save('tensorflow_model.h5')
+        print("✓ Model saved as H5 format!")
     
     # Save preprocessor and feature names
     joblib.dump(preprocessor, 'preprocessor.pkl')
     joblib.dump(features, 'feature_names.pkl')
     
-    print("✓ Model saved successfully!")
+    print("✓ All files saved successfully!")
     print("Files created:")
-    print("- tensorflow_model/ (directory)")
+    print("- tensorflow_model/ (directory) or tensorflow_model.h5")
     print("- preprocessor.pkl")
     print("- feature_names.pkl")
 
