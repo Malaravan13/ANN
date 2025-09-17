@@ -8,13 +8,9 @@ import tensorflow as tf
 app = Flask(__name__)
 
 try:
-    # Try to load the model (check both formats)
-    try:
-        model = tf.keras.models.load_model('tensorflow_model')
-        print("TensorFlow model loaded successfully!")
-    except:
-        model = tf.keras.models.load_model('tensorflow_model.h5')
-        print("TensorFlow model (H5 format) loaded successfully!")
+    # Load the model (H5 format)
+    model = tf.keras.models.load_model('tensorflow_model.h5')
+    print("TensorFlow model loaded successfully!")
     
     preprocessor = joblib.load('preprocessor.pkl')
     feature_names = joblib.load('feature_names.pkl')

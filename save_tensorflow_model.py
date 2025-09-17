@@ -63,8 +63,7 @@ def save_model():
     # Create and train model
     print("Training TensorFlow model...")
     model = Sequential([
-        Input(shape=(X_train.shape[1],)),
-        Dense(64, activation='relu'),
+        Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
         Dropout(0.3),
         Dense(32, activation='relu'),
         Dense(1, activation='sigmoid')
@@ -91,14 +90,19 @@ def save_model():
     # Save model using TensorFlow's native method
     print("Saving model...")
     try:
-        model.save('tensorflow_model')
-        print("✓ TensorFlow model saved successfully!")
+        # Save as H5 format (more compatible)
+        model.save('tensorflow_model.h5')
+        print("✓ TensorFlow model saved as H5 format!")
     except Exception as e:
         print(f"Error saving TensorFlow model: {e}")
         print("Trying alternative save method...")
-        # Alternative: Save as H5 format
-        model.save('tensorflow_model.h5')
-        print("✓ Model saved as H5 format!")
+        # Alternative: Save weights only
+        model.save_weights('tensorflow_weights.h5')
+        # Save model architecture as JSON
+        model_json = model.to_json()
+        with open('tensorflow_model.json', 'w') as json_file:
+            json_file.write(model_json)
+        print("✓ Model saved as weights + JSON format!")
     
     # Save preprocessor and feature names
     joblib.dump(preprocessor, 'preprocessor.pkl')
