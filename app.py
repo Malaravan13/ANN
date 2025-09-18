@@ -7,40 +7,51 @@ import tensorflow as tf
 
 app = Flask(__name__)
 
+# Load ANN model and preprocessor
 try:
-    # Load the model (H5 format)
-    model = tf.keras.models.load_model('tensorflow_model.h5')
-    print("TensorFlow model loaded successfully!")
+    # Try different model formats
+    try:
+        model = tf.keras.models.load_model('ann_model')
+        print("ANN model loaded successfully!")
+    except:
+        try:
+            model = tf.keras.models.load_model('ann_model.h5')
+            print("ANN model loaded successfully!")
+        except:
+            # Load from weights + architecture
+            from tensorflow.keras.models import model_from_json
+            with open('ann_architecture.json', 'r') as json_file:
+                model_json = json_file.read()
+            model = model_from_json(model_json)
+            model.load_weights('ann_weights.h5')
+            print("ANN model loaded successfully!")
     
     preprocessor = joblib.load('preprocessor.pkl')
     feature_names = joblib.load('feature_names.pkl')
+    
 except FileNotFoundError:
-    print("Model files not found. Please run save_tensorflow_model.py first.")
+    print("Model files not found. Please run fix_tensorflow.py first.")
     model = None
     preprocessor = None
     feature_names = []
 
-
-
 @app.route('/')
 def home():
     return jsonify({
-        'message': 'Bank Marketing Subscription Prediction API',
+        'message': 'Bank Marketing Subscription Prediction API (ANN)',
         'endpoints': {
             '/predict': 'POST - Send customer data to get prediction',
             '/health': 'GET - Health check',
             '/features': 'GET - Required fields and example payload'
         },
-        'required_fields': ['age','job','marital','education','default','housing','loan',
-    'contact','month','day_of_week','campaign','pdays','previous','poutcome',
-    'emp.var.rate','cons.price.idx','cons.conf.idx','euribor3m','nr.employed']
+        'required_fields': feature_names if feature_names else []
     })
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """API endpoint for Bank Marketing Subscription Prediction"""
+    """API endpoint for Bank Marketing Subscription Prediction using ANN"""
     if model is None or preprocessor is None:
-        return jsonify({'success': False, 'error': 'Model not loaded'})
+        return jsonify({'success': False, 'error': 'ANN model not loaded'})
     
     try:
         data = request.get_json()
@@ -59,7 +70,7 @@ def predict():
         # Apply preprocessing
         X_processed = preprocessor.transform(input_df)
         
-        # Get prediction from TensorFlow model
+        # Get prediction from ANN
         prediction_proba = model.predict(X_processed, verbose=0)[0][0]
         prediction = 1 if prediction_proba >= 0.5 else 0
         
@@ -76,16 +87,14 @@ def predict():
             'error': str(e)
         })
 
-
-
 @app.route('/health', methods=['GET'])
 def health():
     """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
-        'model_loaded': model is not None
+        'model_loaded': model is not None,
+        'model_type': 'ANN (Neural Network)'
     })
-
 
 @app.route('/features', methods=['GET'])
 def features():
@@ -112,17 +121,10 @@ def features():
         'nr.employed': 5228.1
     }
     return jsonify({
-        'features': feature_names if feature_names else ['age','job','marital','education','default','housing','loan',
-        'contact','month','day_of_week','campaign','pdays','previous','poutcome',
-        'emp.var.rate','cons.price.idx','cons.conf.idx','euribor3m','nr.employed'],
+        'features': feature_names if feature_names else [],
         'example_payload': example
     })
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port)
-    
-    
-
-
