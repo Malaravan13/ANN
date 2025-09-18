@@ -9,22 +9,9 @@ app = Flask(__name__)
 
 # Load ANN model and preprocessor
 try:
-    # Try different model formats
-    try:
-        model = tf.keras.models.load_model('ann_model')
-        print("ANN model loaded successfully!")
-    except:
-        try:
-            model = tf.keras.models.load_model('ann_model.h5')
-            print("ANN model loaded successfully!")
-        except:
-            # Load from weights + architecture
-            from tensorflow.keras.models import model_from_json
-            with open('ann_architecture.json', 'r') as json_file:
-                model_json = json_file.read()
-            model = model_from_json(model_json)
-            model.load_weights('ann_weights.h5')
-            print("ANN model loaded successfully!")
+    # Load H5 model format
+    model = tf.keras.models.load_model('ann_model.h5')
+    print("ANN model loaded successfully!")
     
     preprocessor = joblib.load('preprocessor.pkl')
     feature_names = joblib.load('feature_names.pkl')

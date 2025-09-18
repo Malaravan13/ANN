@@ -86,26 +86,20 @@ def create_ann_model():
     loss, acc = model.evaluate(X_test, y_test, verbose=0)
     print(f"Test Accuracy: {acc:.4f}")
     
-    # Save model using the most compatible method
+    # Save model using H5 format (most compatible)
     print("Saving ANN model...")
     try:
-        # Method 1: Save as SavedModel format (most compatible)
-        model.save('ann_model', save_format='tf')
-        print("✓ ANN model saved as SavedModel format!")
+        # Save as H5 format
+        model.save('ann_model.h5')
+        print("✓ ANN model saved as H5 format!")
     except Exception as e:
-        print(f"Error with SavedModel: {e}")
-        try:
-            # Method 2: Save as H5 format
-            model.save('ann_model.h5')
-            print("✓ ANN model saved as H5 format!")
-        except Exception as e2:
-            print(f"Error with H5: {e2}")
-            # Method 3: Save weights and architecture separately
-            model.save_weights('ann_weights.h5')
-            model_json = model.to_json()
-            with open('ann_architecture.json', 'w') as json_file:
-                json_file.write(model_json)
-            print("✓ ANN model saved as weights + architecture!")
+        print(f"Error with H5: {e}")
+        # Fallback: Save weights and architecture separately
+        model.save_weights('ann_weights.h5')
+        model_json = model.to_json()
+        with open('ann_architecture.json', 'w') as json_file:
+            json_file.write(model_json)
+        print("✓ ANN model saved as weights + architecture!")
     
     # Save preprocessor and feature names
     joblib.dump(preprocessor, 'preprocessor.pkl')
@@ -113,7 +107,7 @@ def create_ann_model():
     
     print("✓ All files saved successfully!")
     print("Files created:")
-    print("- ann_model/ (directory) or ann_model.h5")
+    print("- ann_model.h5")
     print("- preprocessor.pkl")
     print("- feature_names.pkl")
     
@@ -121,7 +115,7 @@ def create_ann_model():
     print("Testing saved model...")
     try:
         from tensorflow.keras.models import load_model
-        loaded_model = load_model('ann_model')
+        loaded_model = load_model('ann_model.h5')
         loaded_preprocessor = joblib.load('preprocessor.pkl')
         loaded_features = joblib.load('feature_names.pkl')
         
