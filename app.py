@@ -9,15 +9,15 @@ app = Flask(__name__)
 
 # Load ANN model and preprocessor
 try:
-    # Load H5 model format
-    model = tf.keras.models.load_model('ann_model.h5')
-    print("ANN model loaded successfully!")
+    # Load the working ANN model
+    model = tf.keras.models.load_model('working_ann_model.h5')
+    print("Working ANN model loaded successfully!")
     
     preprocessor = joblib.load('preprocessor.pkl')
     feature_names = joblib.load('feature_names.pkl')
     
 except FileNotFoundError:
-    print("Model files not found. Please run fix_tensorflow.py first.")
+    print("Model files not found. Please run create_working_ann.py first.")
     model = None
     preprocessor = None
     feature_names = []
